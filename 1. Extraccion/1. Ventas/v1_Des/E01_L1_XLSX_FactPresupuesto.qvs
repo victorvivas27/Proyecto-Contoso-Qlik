@@ -1,0 +1,21 @@
+/* 
+Tabla : Tipos Productos 
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+
+
+SET tableName    = Fact_Presupuesto;
+SET QVDFileName  = L1_EXCEL_FACT_Presupuesto;
+SET PathFile     = $(VentasQvdPath);
+[$(tableName)]:
+LOAD *
+FROM [$(DatosExternos)/Contoso_-_Budget-periodos.xlsx](ooxml, embedded labels, header is 1 lines, table is Budget);
+                     
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ===================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ===================================================;

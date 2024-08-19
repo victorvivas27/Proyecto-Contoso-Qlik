@@ -1,0 +1,19 @@
+/* 
+Tabla : Ventas Tiendas
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+
+SET tableName    = Fact_Ventas_Tiendas;
+SET QVDFileName  = L1_MYSQL_FACT_Ventas_Tienda;
+SET PathFile     = $(VentasQvdPath);
+[$(tableName)]:
+LOAD *;
+SELECT * FROM spanish.factsales;
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ===================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ===================================================;

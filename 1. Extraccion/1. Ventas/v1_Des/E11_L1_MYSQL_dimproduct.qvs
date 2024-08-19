@@ -1,0 +1,25 @@
+/* 
+Tabla : Tipos Productos 
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+
+SET tableName    = Dim_Productos;
+SET QVDFileName  = L1_MYSQL_DIM_Productos;
+SET PathFile     = $(VentasQvdPath);
+
+// Cargar datos desde la base de datos
+[$(tableName)]:
+LOAD *;
+SQL SELECT * FROM spanish.dimproduct;
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+// STORE 
+// ProductName AS "tableName Producto",
+// ProductDescription AS "Descripción Producto"
+// FROM $(tableName) INTO [$(DepartamentoProductoQvdPath)/$(tableName).txt] (txt);
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ===================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ===================================================;

@@ -1,0 +1,19 @@
+/* 
+Tabla : Ventas en Línea 
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+
+SET tableName    = Fact_Ventas-Online;
+SET QVDFileName  = L1_MYSQL_FACT_Ventas_Online;
+SET PathFile     = $(VentasQvdPath);
+[$(tableName)]:
+LOAD *;
+SELECT * FROM spanish.factonlinesales;
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ===================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ===================================================;

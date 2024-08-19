@@ -1,0 +1,19 @@
+/* 
+Tabla : Tipos de Cambio
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+
+SET tableName    = Fact_Tasa_Cambio;
+SET QVDFileName  = L1_MYSQL_FACT_Tasa_Cambio;
+SET PathFile     = $(VentasQvdPath);
+[$(tableName)]:
+LOAD *;
+SELECT * FROM spanish.factexchangerate;
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ===================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ===================================================;
