@@ -1,0 +1,106 @@
+/* 
+Tabla : Maestro Clientes
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+SET tableName    = Maestro_Cliente;
+SET QVDFileName  = L2_Maestro_Cliente;
+SET PathFile     = $(TransformacionVentasQvdPath);
+[$(tableName)]:
+LOAD
+CustomerKey,
+GeographyKey             AS GeographyKey_Cliente,
+CustomerLabel,
+Title,
+FirstName &' '& LastName AS Nombre_Cliente,
+//MiddleName,
+NameStyle,
+BirthDate,
+MaritalStatus,
+Suffix,
+Gender,
+EmailAddress,
+YearlyIncome,
+TotalChildren,
+NumberChildrenAtHome,
+Education,
+Occupation,
+HouseOwnerFlag,
+NumberCarsOwned,
+AddressLine1 AS AddressLine1_Cliente,
+AddressLine2 AS AddressLine2_Cliente,
+Phone,
+DateFirstPurchase,
+CustomerType,
+CompanyName
+FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Cliente.qvd] (qvd);
+
+TRACE ============================================;
+TRACE ** Tabla:$(tableName) Cargada **;
+TRACE ============================================;
+
+LEFT JOIN ($(tableName))
+//<-------- Tienen en comun (GeographyKey) ------------>
+
+LOAD
+GeographyKey       AS GeographyKey_Cliente,
+GeographyTypeKey   AS GeographyTypeKey_Cliente,
+GeographyType      AS GeographyType_Cliente,
+ContinentName      AS ContinentName_Cliente,
+CityName           AS CityName_Cliente,
+StateProvinceName  AS StateProvinceName_Cliente,
+RegionCountryName  AS RegionCountryName_Cliente
+//Geometry
+FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Geografia.qvd] (qvd);
+
+TRACE ============================================;
+TRACE ** Tabla:Gegraphy **;
+TRACE ============================================;
+
+LEFT JOIN ($(tableName))
+//<-------- Tienen en comun (GeographyKey) ------------>
+
+LOAD
+SalesTerritoryKey,
+GeographyKey  AS GeographyKey_Cliente,
+SalesTerritoryLabel,
+SalesTerritoryName,
+SalesTerritoryRegion,
+SalesTerritoryCountry,
+SalesTerritoryGroup,
+SalesTerritoryLevel,
+SalesTerritoryManager,
+StartDate,
+EndDate,
+Status AS Status_Territory
+//ETLLoadID,
+//LoadDate,
+//UpdateDate
+FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Territorio_Venta.qvd] (qvd);
+
+TRACE ============================================;
+TRACE ** Tabla:Territory **;
+TRACE ============================================;
+
+LEFT JOIN ($(tableName))
+//<-------- Tienen en comun ( CustomerKey ) ------------>
+
+LOAD
+CustomerKey,
+"TAG"            AS RFM,
+ACTIVITY         AS ACTIVITY_RFM,
+ACTIONABLE_TIP   AS ACTIONABLE_TIP_RFM
+FROM [$(VentasQvdPath)/L1_MYSQL_DIM_RFM.qvd] (qvd);
+
+TRACE ============================================;
+TRACE ** Tabla:RFM **;
+TRACE ============================================;
+
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ==================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ==================================================;

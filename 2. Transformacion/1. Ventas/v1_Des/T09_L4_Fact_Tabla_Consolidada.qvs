@@ -1,0 +1,64 @@
+/* 
+Tabla : Factica Tabla Consolidada
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+SET tableName         = FACT_Tabla_Consolidada;
+SET QVDFileName       = L4_FACT_Tabla_Consolidada;
+SET PathFile          = $(TransformacionVentasQvdPath);
+TRACE =====================================================;
+TRACE ** Comenzando la carga de $(tableName)**;
+TRACE ======================================================;
+
+[$(tableName)]:
+LOAD
+Flag_Tipo_Transaccion,
+DateKey,
+StoreKey,
+ProductKey,
+PromotionKey,
+CurrencyKey,
+CustomerKey,
+ChannelKey,
+SalesQuantity,
+ReturnQuantity,
+DiscountQuantity,
+UnitCost_EUR,
+UnitPrice_EUR,
+SalesAmount_EUR,
+ReturnAmount_EUR,
+DiscountAmount_EUR,
+TotalCost_EUR,
+MargenBruto_EUR,
+MargenNeto_EUR,
+UnitCost_USD,
+UnitPrice_USD,
+SalesAmount_USD,
+ReturnAmount_USD,
+DiscountAmount_USD,
+TotalCost_USD,
+MargenBruto_USD,
+MargenNeto_USD
+FROM [$(PathFile)/L3_FACT_Venta_Consolidada.qvd] (qvd);
+CONCATENATE
+LOAD
+'Presupuesto' AS   Flag_Tipo_Transaccion,
+ChannelKey,
+StoreKey,
+ProductKey,
+DateKey,
+AverageRate,
+Presupuesto_EURO,
+Presupuesto_USD
+FROM [$(PathFile)/L2_Presupuesto.qvd] (qvd);
+
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ==================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ==================================================;
+
+

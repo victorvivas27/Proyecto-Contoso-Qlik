@@ -1,0 +1,65 @@
+/* 
+Tabla : Maestra Tiendas
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+SET tableName    = Maestra_Tiendas;
+SET QVDFileName  = L2_Maestro_Tienda;
+SET PathFile     = $(TransformacionVentasQvdPath);
+[$(tableName)]:
+LOAD
+StoreKey,
+GeographyKey          AS GeographyKey_Tienda,
+StoreManager,
+StoreType,
+StoreName,
+StoreDescription,
+Status               AS Status_Tienda,
+OpenDate,
+CloseDate,
+EntityKey,
+ZipCode,
+ZipCodeExtension,
+StorePhone,
+StoreFax,
+AddressLine1        AS AddressLine1_Tienda,
+AddressLine2        AS AddressLine2_Tienda,
+CloseReason,
+EmployeeCount,
+SellingAreaSize,
+LastRemodelDate,
+GeoLocation,
+//Geometry,
+ImageUrl
+FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Tiendas.qvd] (qvd);
+
+TRACE ============================================;
+TRACE ** Tabla:$(tableName) Cargada **;
+TRACE ============================================;
+
+LEFT JOIN ($(tableName))
+//<-------- Tienen en comun (GeographyKey) ------------>
+
+LOAD
+GeographyKey       AS GeographyKey_Tienda,
+GeographyTypeKey   AS GeographyTypeKey_Tienda,
+GeographyType      AS GeographyType_Tienda,
+ContinentName      AS ContinentName_Tienda,
+CityName           AS CityName_Tienda,
+StateProvinceName  AS StateProvinceName_Tienda,
+RegionCountryName  AS RegionCountryName_Tienda
+//Geometry 
+FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Geografia.qvd] (qvd);
+
+TRACE ============================================;
+TRACE ** Tabla:Goegraphy **;
+TRACE ============================================;
+
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ==================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ==================================================;

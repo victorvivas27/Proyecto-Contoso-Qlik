@@ -1,0 +1,73 @@
+/*
+Tabla : Maestro Calendario
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+FechaRango:
+LOAD 
+    Min(DateKey) AS MinDateKey,
+    Max(DateKey) AS MaxDateKey
+RESIDENT $(tableName);  // Sin corchetes
+
+// Obtener las fechas inicial y final del rango
+LET FechaInicial = Peek('MinDateKey', 0, 'FechaRango');
+LET FechaFin = Peek('MaxDateKey', 0, 'FechaRango');
+
+// También podrías definir manualmente el rango de fechas
+// LET FechaInicial = Num(MakeDate(2015,1,1));
+// LET FechaFin = Num(MakeDate(2050,12,31));
+
+/* Calcular la cantidad de días */
+
+// Mostrar la cantidad de días en la traza
+TRACE ============================================;
+TRACE ** Fecha inicial: $(FechaInicial);
+TRACE ** Fecha final: $(FechaFin);
+TRACE ============================================;
+
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+DROP TABLE FechaRango;
+TRACE ==================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ** Tabla: FechaRango eliminada de la memoria **;
+TRACE ==================================================;
+
+SET tableName    = Maestro_Calendario;
+SET QVDFileName  = L2_Maestro_Calendario;
+SET PathFile     = $(TransformacionVentasQvdPath);
+
+/* Carga final, donde se aplican las últimas transformaciones */
+[$(tableName)]:
+LOAD 
+    *,
+    Num(Mes) AS Mes_Num,
+    Num(Periodo) AS Periodo_Num
+;
+
+/* Segunda carga, donde se realizan algunas transformaciones adicionales */
+LOAD 
+    DateKey,
+    Date(DateKey, 'DD/MM/YYYY') AS Fecha,
+    Year(DateKey) AS Anio,
+    Month(DateKey) AS Mes,
+    Date(MonthStart(DateKey), 'YYYYMM') AS Periodo
+;
+
+/* Primera carga, que genera una lista de fechas entre FechaInicial y FechaFin */
+LOAD 
+    $(FechaInicial) + RecNo() - 1 AS DateKey
+AutoGenerate $(FechaFin) - $(FechaInicial) + 1;
+
+TRACE ============================================;
+TRACE ** Tabla: $(tableName) Cargada **;
+TRACE ============================================;
+
+/* Guarda la tabla en un archivo QVD en la carpeta de versión especificada */
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ==================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ==================================================;

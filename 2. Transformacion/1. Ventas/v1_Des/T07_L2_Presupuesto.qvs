@@ -1,0 +1,88 @@
+/* 
+Tabla : Presupuesto
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+SET tableName        = Presupuesto;
+SET QVDFileName      = L2_Presupuesto;
+SET PathFile         = $(TransformacionVentasQvdPath);
+SET tablaTemporal_01 = 'Tabla_Temporal-01';
+SET tablaTemporal_02 = 'Tabla_Temporal-02';
+[$(tablaTemporal_01)]:
+CROSSTABLE(DateKey, Presupuesto, 3)
+LOAD
+*
+FROM [$(VentasQvdPath)/L1_EXCEL_FACT_Presupuesto.qvd] (qvd);
+
+TRACE ============================================;
+TRACE ** Tabla: $(tablaTemporal_01) cargada **;
+TRACE ============================================;
+
+
+[$(tablaTemporal_02)]:
+NOCONCATENATE
+LOAD 
+ChannelKey,
+StoreKey,
+ProductKey,
+NUM#(DateKey)   AS DateKey ,
+Presupuesto     AS Presupuesto_EURO
+RESIDENT [$(tablaTemporal_01)]
+WHERE Presupuesto <> 0;
+
+DROP TABLE [$(tablaTemporal_01)];
+
+TRACE ============================================;
+TRACE ** Tabla: $(tablaTemporal_02) Cargada**;
+TRACE ============================================;
+
+LEFT JOIN ([$(tablaTemporal_02)])
+
+LOAD
+NUM(MonthStart(DateKey)) AS DateKey,
+AVG(AverageRate)         AS AverageRate
+FROM [$(VentasQvdPath)/L1_MYSQL_FACT_Tasa_Cambio.qvd] (qvd)
+WHERE  CurrencyKey = 1
+GROUP BY NUM(MonthStart(DateKey));
+TRACE ============================================;
+TRACE ** Tabla:Tasa Cambio Joiniada Cargada**;
+TRACE ============================================;
+
+
+[$(tableName)]:
+NOCONCATENATE
+LOAD 
+ChannelKey,
+StoreKey,
+ProductKey,
+DateKey ,
+AverageRate,
+Presupuesto_EURO,
+Presupuesto_EURO * AverageRate AS  Presupuesto_USD
+RESIDENT [$(tablaTemporal_02)];
+DROP TABLE [$(tablaTemporal_02)];
+TRACE ============================================;
+TRACE ** Tabla:$(presupuesto) Cargada**;
+TRACE ============================================;
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ==================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ==================================================;
+
+
+/*===================================================================================*/
+
+// ¿Qué hace CROSSTABLE?
+// CROSSTABLE(DateKey, Presupuesto, 3):
+
+// DateKey: Este será el nombre del campo que contendrá los nombres de las columnas que has listado 
+// (como "44317", "44348", etc.). 
+// Cada uno de estos valores de columna se convertirá en una fila con su correspondiente valor en el campo Presupuesto.
+// Presupuesto: Este es el campo que contendrá los valores originales que estaban en las celdas de esas columnas.
+// 3: Este número indica que las primeras tres columnas (ChannelKey, StoreKey, ProductKey) 
+// deben mantenerse como están y no deben ser "desdobladas" por la función CROSSTABLE.
+

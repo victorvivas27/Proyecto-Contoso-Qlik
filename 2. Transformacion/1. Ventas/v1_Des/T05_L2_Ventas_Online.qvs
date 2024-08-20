@@ -1,0 +1,62 @@
+/* 
+Tabla : Ventas Online
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+SET tableName    = Ventas_Online;
+SET QVDFileName  = L2_FACT_Ventas_Online;
+SET PathFile     = $(TransformacionVentasQvdPath);
+
+[$(tableName)]:
+
+LOAD *,
+MargenBruto - DiscountAmount           AS MargenNeto;
+
+LOAD * ,
+SalesAmount - TotalCost - ReturnAmount AS MargenBruto;
+
+LOAD
+//Dimensiones
+NUM(MonthStart(DateKey))               AS DateKey,
+StoreKey,
+ProductKey,
+PromotionKey,
+CurrencyKey,
+CustomerKey,
+UnitCost, 
+UnitPrice, 
+
+//Metricas
+SUM(SalesQuantity)     AS SalesQuantity,
+SUM(SalesAmount)       AS SalesAmount,
+SUM(ReturnQuantity)    AS ReturnQuantity,
+SUM(ReturnAmount)      AS ReturnAmount,
+SUM(DiscountQuantity)  AS DiscountQuantity,
+SUM(DiscountAmount)    AS DiscountAmount,
+SUM(TotalCost)         AS TotalCost
+
+//Otros campos
+// OnlineSalesKey,
+// SalesOrderLineNumber,
+// SalesOrderNumber
+
+FROM [$(VentasQvdPath)/L1_MYSQL_FACT_Ventas_Online.qvd] (qvd)
+GROUP BY
+NUM(MonthStart(DateKey)),
+StoreKey,
+ProductKey,
+PromotionKey,
+CurrencyKey,
+CustomerKey,
+UnitCost , 
+UnitPrice ;
+
+TRACE ============================================;
+TRACE ** Tabla: Ventas Online **;
+TRACE ============================================;
+
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+
+
+

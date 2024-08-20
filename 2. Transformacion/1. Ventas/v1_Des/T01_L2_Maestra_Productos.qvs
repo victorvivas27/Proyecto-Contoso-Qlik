@@ -1,0 +1,88 @@
+/* 
+Tabla : Maestra Productos
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+SET tableName    = Maestra_Productos;
+SET QVDFileName  = L2_Maestra_Producto;
+SET PathFile     = $(TransformacionVentasQvdPath);
+
+[$(tableName)]:
+LOAD
+ProductKey,
+ProductLabel,
+ProductName,
+ProductDescription,
+ProductSubcategoryKey,
+Manufacturer,
+BrandName,
+ClassID,
+ClassName,
+StyleID,
+StyleName,
+ColorID,
+ColorName,
+Size,
+SizeRange,
+SizeUnitMeasureID,
+Weight,
+WeightUnitMeasureID,
+UnitOfMeasureID,
+UnitOfMeasureName,
+StockTypeID,
+StockTypeName,
+UnitCost                       AS UnitCost_Producto,
+UnitPrice                      AS UnitPrice_Producto,
+AvailableForSaleDate,
+StopSaleDate,
+Status                         AS Status_Producto,
+ImageURL,
+ProductURL,
+ETLLoadID,
+LoadDate,
+UpdateDate
+FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Productos.qvd] (qvd);
+
+TRACE ============================================;
+TRACE ** Tabla:$(tableName) Cargada **;
+TRACE ============================================;
+
+LEFT JOIN ($(tableName))
+//<-------- Tienen en comun (ProductSubcategoryKey) ------------>
+
+LOAD
+ProductSubcategoryKey,
+ProductSubcategoryLabel,
+ProductSubcategoryName,
+ProductSubcategoryDescription,
+ProductCategoryKey
+FROM [$(VentasQvdPath)/L1_MYSQL_DIM_SupCategoria_Producto.qvd] (qvd);
+
+
+
+TRACE ============================================;
+TRACE ** Tabla:Producto SupCategoria **;
+TRACE ============================================;
+
+LEFT JOIN ($(tableName))
+//<-------- Tienen en comun (ProductCategoryKey) ------------>
+
+LOAD
+ProductCategoryKey,
+ProductCategoryLabel,
+ProductCategoryName,
+ProductCategoryDescription
+FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Categoria_Producto.qvd] (qvd);
+
+TRACE ============================================;
+TRACE ** Tabla:Producto Categoria **;
+TRACE ============================================;
+
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ==================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ==================================================;

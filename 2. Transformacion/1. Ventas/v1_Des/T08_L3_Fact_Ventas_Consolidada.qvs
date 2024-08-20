@@ -1,0 +1,138 @@
+/* 
+Tabla : Factica Ventas Consolidada
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+SET tableName          = FACT_Venta_Consolidada;
+SET QVDFileName        = L3_FACT_Venta_Consolidada;
+SET PathFile           = $(TransformacionVentasQvdPath);
+SET tablaTemporal_01   = Tabla_Temporal_1;
+SET mapTasaCambio      = Map_Tasa_Cambio;
+
+TRACE ============================================;
+TRACE ** Comenzando la carga de $(tableName) **;
+TRACE ============================================;
+
+
+[$(tablaTemporal_01)]:
+
+LOAD
+'Ventas Online' AS Flag_Tipo_Transaccion,
+DateKey,
+StoreKey,
+ProductKey,
+PromotionKey,
+CurrencyKey,
+CustomerKey,
+UnitCost,
+UnitPrice,
+SalesQuantity,
+SalesAmount,
+ReturnQuantity,
+ReturnAmount,
+DiscountQuantity,
+DiscountAmount,
+TotalCost,
+MargenBruto,
+MargenNeto
+FROM [$(PathFile)/L2_FACT_Ventas_Online.qvd] (qvd);
+CONCATENATE
+LOAD
+'Ventas Tienda' AS  Flag_Tipo_Transaccion,
+DateKey,
+channelKey,
+StoreKey,
+ProductKey,
+PromotionKey,
+CurrencyKey,
+UnitCost,
+UnitPrice,
+SalesQuantity,
+SalesAmount,
+ReturnQuantity,
+ReturnAmount,
+DiscountQuantity,
+DiscountAmount,
+TotalCost,
+MargenBruto,
+MargenNeto
+FROM [$(PathFile)/L2_FACT_Maestra_Ventas_Tiendas.qvd] (qvd);
+
+[$(mapTasaCambio)]:
+MAPPING
+LOAD
+NUM(MonthStart(DateKey)) AS DateKey,
+AVG(AverageRate)         AS AverageRate
+FROM [$(VentasQvdPath)/L1_MYSQL_FACT_Tasa_Cambio.qvd] (qvd)
+WHERE  CurrencyKey = 1
+GROUP BY NUM(MonthStart(DateKey));
+TRACE ============================================;
+TRACE ** Tabla:Tasa Cambio Joiniada Cargada**;
+TRACE ============================================;
+
+
+[$(tableName)]:
+NOCONCATENATE
+LOAD*,
+//APPLYMAP($(mapTasaCambio),DateKey,'N/E') AS AverageRate,
+UnitCost_EUR      * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS UnitCost_USD,
+UnitPrice_EUR     * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS UnitPrice_USD,
+SalesAmount_EUR   * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS SalesAmount_USD,
+ReturnAmount_EUR  * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS ReturnAmount_USD,
+DiscountAmount_EUR* APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS DiscountAmount_USD,
+TotalCost_EUR     * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS TotalCost_USD,
+MargenBruto_EUR   * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS MargenBruto_USD,
+MargenNeto_EUR    * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS MargenNeto_USD;
+
+LOAD
+Flag_Tipo_Transaccion,
+DateKey,
+StoreKey,
+ProductKey,
+PromotionKey,
+CurrencyKey,
+CustomerKey,
+channelKey   AS ChannelKey,
+SalesQuantity,
+ReturnQuantity,
+DiscountQuantity,
+UnitCost          AS UnitCost_EUR,
+UnitPrice         AS UnitPrice_EUR,
+SalesAmount       AS SalesAmount_EUR,
+ReturnAmount      AS ReturnAmount_EUR,
+DiscountAmount    AS DiscountAmount_EUR,
+TotalCost         AS TotalCost_EUR,
+MargenBruto       AS MargenBruto_EUR,
+MargenNeto        AS MargenNeto_EUR
+RESIDENT $(tablaTemporal_01);
+
+DROP TABLE $(tablaTemporal_01); 
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+
+
+TRACE ============================================;
+TRACE ** $(QVDFileName) guardado correctamente **;
+TRACE ============================================;
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ==================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ==================================================;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

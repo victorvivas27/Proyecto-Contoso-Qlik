@@ -1,0 +1,61 @@
+/* 
+Tabla : Maestra Ventas Tiendas
+Autor : Victor Vivas
+Fecha : 19-08-2024
+*/
+SET tableName    = Maestra_Ventas_Tiendas;
+SET QVDFileName  = L2_FACT_Maestra_Ventas_Tiendas;
+SET PathFile     = $(TransformacionVentasQvdPath);
+[$(tableName)]:
+
+LOAD *,
+MargenBruto - DiscountAmount           AS MargenNeto;
+
+LOAD * ,
+SalesAmount - TotalCost - ReturnAmount AS MargenBruto;
+
+LOAD
+//Dimenciones
+//SalesKey,
+NUM(MonthStart(DateKey))               AS DateKey,
+channelKey,
+StoreKey,
+ProductKey,
+PromotionKey,
+CurrencyKey,
+UnitCost,
+UnitPrice,
+
+//Metricas
+
+SUM(SalesQuantity)     AS SalesQuantity,
+SUM(SalesAmount)       AS SalesAmount,
+SUM(ReturnQuantity)    AS ReturnQuantity,
+SUM(ReturnAmount)      AS ReturnAmount,
+SUM(DiscountQuantity)  AS DiscountQuantity,
+SUM(DiscountAmount)    AS DiscountAmount,
+SUM(TotalCost)         AS TotalCost
+
+FROM [$(VentasQvdPath)/L1_MYSQL_FACT_Ventas_Tienda.qvd] (qvd)
+GROUP BY
+NUM(MonthStart(DateKey)),
+channelKey,
+StoreKey,
+ProductKey,
+PromotionKey,
+CurrencyKey,
+UnitCost,
+UnitPrice;
+
+TRACE ============================================;
+TRACE ** Tabla:$(tableName) Cargada **;
+TRACE ============================================;
+
+// Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+
+// Eliminar la tabla de la memoria
+DROP TABLE [$(tableName)];
+TRACE ==================================================;
+TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+TRACE ==================================================;
