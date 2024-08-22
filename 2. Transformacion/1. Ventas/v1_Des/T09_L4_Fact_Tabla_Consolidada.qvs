@@ -6,9 +6,9 @@ Fecha : 19-08-2024
 SET tableName         = FACT_Tabla_Consolidada;
 SET QVDFileName       = L4_FACT_Tabla_Consolidada;
 SET PathFile          = $(TransformacionVentasQvdPath);
-TRACE =====================================================;
-TRACE ** Comenzando la carga de $(tableName)**;
-TRACE ======================================================;
+// TRACE =====================================================;
+// TRACE ** Comenzando la carga de $(tableName)**;
+// TRACE ======================================================;
 
 [$(tableName)]:
 LOAD
@@ -57,8 +57,8 @@ STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
 
 // Eliminar la tabla de la memoria
 DROP TABLE [$(tableName)];
-TRACE ==================================================;
-TRACE ** Tabla: $(tableName) eliminada de la memoria **;
-TRACE ==================================================;
+// TRACE ==================================================;
+// TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+// TRACE ==================================================;
 
 

@@ -14,7 +14,7 @@ SELECT * FROM spanish.dimemployee;
 STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
 // Eliminar la tabla de la memoria
 DROP TABLE [$(tableName)];
-TRACE ===================================================;
-TRACE ** Tabla: $(tableName) eliminada de la memoria **;
-TRACE ===================================================;
+// TRACE ===================================================;
+// TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+// TRACE ===================================================;
 

@@ -20,18 +20,18 @@ LET FechaFin = Peek('MaxDateKey', 0, 'FechaRango');
 /* Calcular la cantidad de días */
 
 // Mostrar la cantidad de días en la traza
-TRACE ============================================;
-TRACE ** Fecha inicial: $(FechaInicial);
-TRACE ** Fecha final: $(FechaFin);
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Fecha inicial: $(FechaInicial);
+// TRACE ** Fecha final: $(FechaFin);
+// TRACE ============================================;
 
 // Eliminar la tabla de la memoria
 DROP TABLE [$(tableName)];
 DROP TABLE FechaRango;
-TRACE ==================================================;
-TRACE ** Tabla: $(tableName) eliminada de la memoria **;
-TRACE ** Tabla: FechaRango eliminada de la memoria **;
-TRACE ==================================================;
+// TRACE ==================================================;
+// TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+// TRACE ** Tabla: FechaRango eliminada de la memoria **;
+// TRACE ==================================================;
 
 SET tableName    = Maestro_Calendario;
 SET QVDFileName  = L2_Maestro_Calendario;
@@ -59,15 +59,15 @@ LOAD
     $(FechaInicial) + RecNo() - 1 AS DateKey
 AutoGenerate $(FechaFin) - $(FechaInicial) + 1;
 
-TRACE ============================================;
-TRACE ** Tabla: $(tableName) Cargada **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla: $(tableName) Cargada **;
+// TRACE ============================================;
 
 /* Guarda la tabla en un archivo QVD en la carpeta de versión especificada */
 STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
 
 // Eliminar la tabla de la memoria
 DROP TABLE [$(tableName)];
-TRACE ==================================================;
-TRACE ** Tabla: $(tableName) eliminada de la memoria **;
-TRACE ==================================================;
+// TRACE ==================================================;
+// TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+// TRACE ==================================================;

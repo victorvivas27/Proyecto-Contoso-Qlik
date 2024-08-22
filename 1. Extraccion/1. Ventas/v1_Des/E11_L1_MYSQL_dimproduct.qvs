@@ -20,6 +20,6 @@ STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
 // FROM $(tableName) INTO [$(DepartamentoProductoQvdPath)/$(tableName).txt] (txt);
 // Eliminar la tabla de la memoria
 DROP TABLE [$(tableName)];
-TRACE ===================================================;
-TRACE ** Tabla: $(tableName) eliminada de la memoria **;
-TRACE ===================================================;
+// TRACE ===================================================;
+// TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+// TRACE ===================================================;

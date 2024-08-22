@@ -51,9 +51,9 @@ CustomerKey,
 UnitCost , 
 UnitPrice ;
 
-TRACE ============================================;
-TRACE ** Tabla: Ventas Online **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla: Ventas Online **;
+// TRACE ============================================;
 
 // Guarda la tabla en un archivo QVD en la carpeta de versión especificada
 STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);

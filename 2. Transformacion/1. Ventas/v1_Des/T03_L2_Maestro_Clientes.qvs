@@ -35,9 +35,9 @@ CustomerType,
 CompanyName
 FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Cliente.qvd] (qvd);
 
-TRACE ============================================;
-TRACE ** Tabla:$(tableName) Cargada **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla:$(tableName) Cargada **;
+// TRACE ============================================;
 
 LEFT JOIN ($(tableName))
 //<-------- Tienen en comun (GeographyKey) ------------>
@@ -53,9 +53,9 @@ RegionCountryName  AS RegionCountryName_Cliente
 //Geometry
 FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Geografia.qvd] (qvd);
 
-TRACE ============================================;
-TRACE ** Tabla:Gegraphy **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla:Gegraphy **;
+// TRACE ============================================;
 
 LEFT JOIN ($(tableName))
 //<-------- Tienen en comun (GeographyKey) ------------>
@@ -78,9 +78,9 @@ Status AS Status_Territory
 //UpdateDate
 FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Territorio_Venta.qvd] (qvd);
 
-TRACE ============================================;
-TRACE ** Tabla:Territory **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla:Territory **;
+// TRACE ============================================;
 
 LEFT JOIN ($(tableName))
 //<-------- Tienen en comun ( CustomerKey ) ------------>
@@ -92,15 +92,15 @@ ACTIVITY         AS ACTIVITY_RFM,
 ACTIONABLE_TIP   AS ACTIONABLE_TIP_RFM
 FROM [$(VentasQvdPath)/L1_MYSQL_DIM_RFM.qvd] (qvd);
 
-TRACE ============================================;
-TRACE ** Tabla:RFM **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla:RFM **;
+// TRACE ============================================;
 
 // Guarda la tabla en un archivo QVD en la carpeta de versión especificada
 STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
 
 // Eliminar la tabla de la memoria
 DROP TABLE [$(tableName)];
-TRACE ==================================================;
-TRACE ** Tabla: $(tableName) eliminada de la memoria **;
-TRACE ==================================================;
+// TRACE ==================================================;
+// TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+// TRACE ==================================================;

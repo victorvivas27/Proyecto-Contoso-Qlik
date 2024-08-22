@@ -43,9 +43,9 @@ LoadDate,
 UpdateDate
 FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Productos.qvd] (qvd);
 
-TRACE ============================================;
-TRACE ** Tabla:$(tableName) Cargada **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla:$(tableName) Cargada **;
+// TRACE ============================================;
 
 LEFT JOIN ($(tableName))
 //<-------- Tienen en comun (ProductSubcategoryKey) ------------>
@@ -60,9 +60,9 @@ FROM [$(VentasQvdPath)/L1_MYSQL_DIM_SupCategoria_Producto.qvd] (qvd);
 
 
 
-TRACE ============================================;
-TRACE ** Tabla:Producto SupCategoria **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla:Producto SupCategoria **;
+// TRACE ============================================;
 
 LEFT JOIN ($(tableName))
 //<-------- Tienen en comun (ProductCategoryKey) ------------>
@@ -74,15 +74,15 @@ ProductCategoryName,
 ProductCategoryDescription
 FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Categoria_Producto.qvd] (qvd);
 
-TRACE ============================================;
-TRACE ** Tabla:Producto Categoria **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla:Producto Categoria **;
+// TRACE ============================================;
 
 // Guarda la tabla en un archivo QVD en la carpeta de versión especificada
 STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
 
 // Eliminar la tabla de la memoria
 DROP TABLE [$(tableName)];
-TRACE ==================================================;
-TRACE ** Tabla: $(tableName) eliminada de la memoria **;
-TRACE ==================================================;
+// TRACE ==================================================;
+// TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+// TRACE ==================================================;

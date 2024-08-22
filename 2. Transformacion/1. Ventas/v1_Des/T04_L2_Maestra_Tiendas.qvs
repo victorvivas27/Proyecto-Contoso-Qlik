@@ -33,9 +33,9 @@ GeoLocation,
 ImageUrl
 FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Tiendas.qvd] (qvd);
 
-TRACE ============================================;
-TRACE ** Tabla:$(tableName) Cargada **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla:$(tableName) Cargada **;
+// TRACE ============================================;
 
 LEFT JOIN ($(tableName))
 //<-------- Tienen en comun (GeographyKey) ------------>
@@ -51,15 +51,15 @@ RegionCountryName  AS RegionCountryName_Tienda
 //Geometry 
 FROM [$(VentasQvdPath)/L1_MYSQL_DIM_Geografia.qvd] (qvd);
 
-TRACE ============================================;
-TRACE ** Tabla:Goegraphy **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla:Goegraphy **;
+// TRACE ============================================;
 
 // Guarda la tabla en un archivo QVD en la carpeta de versión especificada
 STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
 
 // Eliminar la tabla de la memoria
 DROP TABLE [$(tableName)];
-TRACE ==================================================;
-TRACE ** Tabla: $(tableName) eliminada de la memoria **;
-TRACE ==================================================;
+// TRACE ==================================================;
+// TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+// TRACE ==================================================;

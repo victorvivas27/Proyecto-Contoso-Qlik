@@ -9,9 +9,9 @@ SET PathFile           = $(TransformacionVentasQvdPath);
 SET tablaTemporal_01   = Tabla_Temporal_1;
 SET mapTasaCambio      = Map_Tasa_Cambio;
 
-TRACE ============================================;
-TRACE ** Comenzando la carga de $(tableName) **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Comenzando la carga de $(tableName) **;
+// TRACE ============================================;
 
 
 [$(tablaTemporal_01)]:
@@ -66,9 +66,9 @@ AVG(AverageRate)         AS AverageRate
 FROM [$(VentasQvdPath)/L1_MYSQL_FACT_Tasa_Cambio.qvd] (qvd)
 WHERE  CurrencyKey = 1
 GROUP BY NUM(MonthStart(DateKey));
-TRACE ============================================;
-TRACE ** Tabla:Tasa Cambio Joiniada Cargada**;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla:Tasa Cambio Joiniada Cargada**;
+// TRACE ============================================;
 
 
 [$(tableName)]:
@@ -111,14 +111,14 @@ DROP TABLE $(tablaTemporal_01);
 STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
 
 
-TRACE ============================================;
-TRACE ** $(QVDFileName) guardado correctamente **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** $(QVDFileName) guardado correctamente **;
+// TRACE ============================================;
 // Eliminar la tabla de la memoria
 DROP TABLE [$(tableName)];
-TRACE ==================================================;
-TRACE ** Tabla: $(tableName) eliminada de la memoria **;
-TRACE ==================================================;
+// TRACE ==================================================;
+// TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+// TRACE ==================================================;
 
 
 

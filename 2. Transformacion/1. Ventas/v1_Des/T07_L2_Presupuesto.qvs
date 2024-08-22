@@ -14,9 +14,9 @@ LOAD
 *
 FROM [$(VentasQvdPath)/L1_EXCEL_FACT_Presupuesto.qvd] (qvd);
 
-TRACE ============================================;
-TRACE ** Tabla: $(tablaTemporal_01) cargada **;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla: $(tablaTemporal_01) cargada **;
+// TRACE ============================================;
 
 
 [$(tablaTemporal_02)]:
@@ -32,9 +32,9 @@ WHERE Presupuesto <> 0;
 
 DROP TABLE [$(tablaTemporal_01)];
 
-TRACE ============================================;
-TRACE ** Tabla: $(tablaTemporal_02) Cargada**;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla: $(tablaTemporal_02) Cargada**;
+// TRACE ============================================;
 
 LEFT JOIN ([$(tablaTemporal_02)])
 
@@ -44,9 +44,9 @@ AVG(AverageRate)         AS AverageRate
 FROM [$(VentasQvdPath)/L1_MYSQL_FACT_Tasa_Cambio.qvd] (qvd)
 WHERE  CurrencyKey = 1
 GROUP BY NUM(MonthStart(DateKey));
-TRACE ============================================;
-TRACE ** Tabla:Tasa Cambio Joiniada Cargada**;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla:Tasa Cambio Joiniada Cargada**;
+// TRACE ============================================;
 
 
 [$(tableName)]:
@@ -61,17 +61,17 @@ Presupuesto_EURO,
 Presupuesto_EURO * AverageRate AS  Presupuesto_USD
 RESIDENT [$(tablaTemporal_02)];
 DROP TABLE [$(tablaTemporal_02)];
-TRACE ============================================;
-TRACE ** Tabla:$(presupuesto) Cargada**;
-TRACE ============================================;
+// TRACE ============================================;
+// TRACE ** Tabla:$(presupuesto) Cargada**;
+// TRACE ============================================;
 // Guarda la tabla en un archivo QVD en la carpeta de versión especificada
 STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
 
 // Eliminar la tabla de la memoria
 DROP TABLE [$(tableName)];
-TRACE ==================================================;
-TRACE ** Tabla: $(tableName) eliminada de la memoria **;
-TRACE ==================================================;
+// TRACE ==================================================;
+// TRACE ** Tabla: $(tableName) eliminada de la memoria **;
+// TRACE ==================================================;
 
 
 /*===================================================================================*/
