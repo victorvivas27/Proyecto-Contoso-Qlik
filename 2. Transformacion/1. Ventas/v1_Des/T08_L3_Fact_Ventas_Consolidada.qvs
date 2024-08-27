@@ -1,22 +1,24 @@
+
 /* 
 Tabla : Factica Ventas Consolidada
 Autor : Victor Vivas
-Fecha : 19-08-2024
+Fecha : 27-08-2024
 */
-SET tableName          = FACT_Venta_Consolidada;
-SET QVDFileName        = L3_FACT_Venta_Consolidada;
-SET PathFile           = $(TransformacionVentasQvdPath);
-SET tablaTemporal_01   = Tabla_Temporal_1;
-SET mapTasaCambio      = Map_Tasa_Cambio;
 
-// TRACE ============================================;
-// TRACE ** Comenzando la carga de $(tableName) **;
-// TRACE ============================================;
+// Definición de variables para uso en el script
+ SET tableName          = FACT_Venta_Consolidada;
+ SET QVDFileName        = L3_FACT_Venta_Consolidada;
+ SET PathFile           = $(TransformacionVentasQvdPath);
+ SET tablaTemporal_01   = Tabla_Temporal_1;
+ SET mapTasaCambio      = Map_Tasa_Cambio;
 
 
-[$(tablaTemporal_01)]:
 
+// PROCESO 1: Carga de datos de ventas online y tienda en una tabla temporal
+$(tablaTemporal_01):
+// Carga de datos de ventas online
 LOAD
+// Etiqueta para identificar el tipo de transacción
 'Ventas Online' AS Flag_Tipo_Transaccion,
 DateKey,
 StoreKey,
@@ -36,8 +38,10 @@ TotalCost,
 MargenBruto,
 MargenNeto
 FROM [$(PathFile)/L2_FACT_Ventas_Online.qvd] (qvd);
+// Carga adicional de datos de ventas en tienda, concatenando con la carga anterior
 CONCATENATE
 LOAD
+// Etiqueta para identificar el tipo de transacción
 'Ventas Tienda' AS  Flag_Tipo_Transaccion,
 DateKey,
 channelKey,
@@ -58,32 +62,35 @@ MargenBruto,
 MargenNeto
 FROM [$(PathFile)/L2_FACT_Maestra_Ventas_Tiendas.qvd] (qvd);
 
-[$(mapTasaCambio)]:
+// PROCESO 2: Creación del mapa de tasas de cambio
+$(mapTasaCambio):
 MAPPING
 LOAD
-NUM(MonthStart(DateKey)) AS DateKey,
-AVG(AverageRate)         AS AverageRate
+    NUM(MonthStart(DateKey)) AS DateKey,          // Mes y año como clave para la tasa de cambio
+    AVG(AverageRate) AS AverageRate               // Promedio de la tasa de cambio
 FROM [$(VentasQvdPath)/L1_MYSQL_FACT_Tasa_Cambio.qvd] (qvd)
-WHERE  CurrencyKey = 1
-GROUP BY NUM(MonthStart(DateKey));
-// TRACE ============================================;
-// TRACE ** Tabla:Tasa Cambio Joiniada Cargada**;
-// TRACE ============================================;
+WHERE CurrencyKey = 1                          // Filtro por clave de moneda
+GROUP BY NUM(MonthStart(DateKey));             // Agrupación por mes y año
 
 
-[$(tableName)]:
+// PROCESO 3: Carga de datos finales en la tabla de destino, utilizando el load precedente
+$(tableName):
 NOCONCATENATE
+//tercer  carga: realiza la conversión de las cifras en EUR a USD usando AverageRateAjustado
 LOAD*,
-//APPLYMAP($(mapTasaCambio),DateKey,'N/E') AS AverageRate,
-UnitCost_EUR      * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS UnitCost_USD,
-UnitPrice_EUR     * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS UnitPrice_USD,
-SalesAmount_EUR   * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS SalesAmount_USD,
-ReturnAmount_EUR  * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS ReturnAmount_USD,
-DiscountAmount_EUR* APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS DiscountAmount_USD,
-TotalCost_EUR     * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS TotalCost_USD,
-MargenBruto_EUR   * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS MargenBruto_USD,
-MargenNeto_EUR    * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS MargenNeto_USD;
+UnitCost_EUR             * AverageRateAjustado AS UnitCost_USD,
+UnitPrice_EUR            * AverageRateAjustado AS UnitPrice_USD,
+SalesAmount_EUR          * AverageRateAjustado AS SalesAmount_USD,
+ReturnAmount_EUR         * AverageRateAjustado AS ReturnAmount_USD,
+DiscountAmount_EUR       * AverageRateAjustado AS DiscountAmount_USD,
+TotalCost_EUR            * AverageRateAjustado AS TotalCost_USD,
+MargenBruto_EUR          * AverageRateAjustado AS MargenBruto_USD,
+MargenNeto_EUR           * AverageRateAjustado AS MargenNeto_USD;
 
+// Segunda carga: Ajusta AverageRateAjustado basado en el valor de AverageRate
+LOAD*,If(AverageRate = 'N/E',PEEK(AverageRateAjustado),AverageRate) AS AverageRateAjustado;
+
+// Primera carga: Realiza la carga de datos desde la tabla temporal
 LOAD
 Flag_Tipo_Transaccion,
 DateKey,
@@ -92,10 +99,11 @@ ProductKey,
 PromotionKey,
 CurrencyKey,
 CustomerKey,
-channelKey   AS ChannelKey,
+channelKey        AS ChannelKey,
 SalesQuantity,
 ReturnQuantity,
 DiscountQuantity,
+APPLYMAP('$(mapTasaCambio)',DateKey,'N/E') AS AverageRate,
 UnitCost          AS UnitCost_EUR,
 UnitPrice         AS UnitPrice_EUR,
 SalesAmount       AS SalesAmount_EUR,
@@ -104,35 +112,121 @@ DiscountAmount    AS DiscountAmount_EUR,
 TotalCost         AS TotalCost_EUR,
 MargenBruto       AS MargenBruto_EUR,
 MargenNeto        AS MargenNeto_EUR
-RESIDENT $(tablaTemporal_01);
+RESIDENT $(tablaTemporal_01) // Carga desde la tabla temporal
+ORDER BY DateKey ASC;  // Ordena por fecha
+DROP TABLE $(tablaTemporal_01);
 
-DROP TABLE $(tablaTemporal_01); 
+// Elimina el campo AverageRate de la tabla final para liberar espacio
+DROP FIELD AverageRate FROM $(tableName);
+RENAME FIELD AverageRateAjustado TO AverageRate;
+
 // Guarda la tabla en un archivo QVD en la carpeta de versión especificada
-STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
+STORE $(tableName) INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
 
-
-// TRACE ============================================;
-// TRACE ** $(QVDFileName) guardado correctamente **;
-// TRACE ============================================;
 // Eliminar la tabla de la memoria
-DROP TABLE [$(tableName)];
-// TRACE ==================================================;
-// TRACE ** Tabla: $(tableName) eliminada de la memoria **;
-// TRACE ==================================================;
+DROP TABLE $(tableName);
 
 
 
 
+// /* 
+// Tabla : Factica Ventas Consolidada
+// Autor : Victor Vivas
+// Fecha : 19-08-2024
+// */
+// SET tableName          = FACT_Venta_Consolidada;
+// SET QVDFileName        = L3_FACT_Venta_Consolidada;
+// SET PathFile           = $(TransformacionVentasQvdPath);
+// SET tablaTemporal_01   = Tabla_Temporal_1;
+// SET mapTasaCambio      = Map_Tasa_Cambio;
+// [$(tablaTemporal_01)]:
+// LOAD
+// 'Ventas Online' AS Flag_Tipo_Transaccion,
+// DateKey,
+// StoreKey,
+// ProductKey,
+// PromotionKey,
+// CurrencyKey,
+// CustomerKey,
+// UnitCost,
+// UnitPrice,
+// SalesQuantity,
+// SalesAmount,
+// ReturnQuantity,
+// ReturnAmount,
+// DiscountQuantity,
+// DiscountAmount,
+// TotalCost,
+// MargenBruto,
+// MargenNeto
+// FROM [$(PathFile)/L2_FACT_Ventas_Online.qvd] (qvd);
+// CONCATENATE
+// LOAD
+// 'Ventas Tienda' AS  Flag_Tipo_Transaccion,
+// DateKey,
+// channelKey,
+// StoreKey,
+// ProductKey,
+// PromotionKey,
+// CurrencyKey,
+// UnitCost,
+// UnitPrice,
+// SalesQuantity,
+// SalesAmount,
+// ReturnQuantity,
+// ReturnAmount,
+// DiscountQuantity,
+// DiscountAmount,
+// TotalCost,
+// MargenBruto,
+// MargenNeto
+// FROM [$(PathFile)/L2_FACT_Maestra_Ventas_Tiendas.qvd] (qvd);
+// [$(mapTasaCambio)]:
+// MAPPING
+// LOAD
+// NUM(MonthStart(DateKey)) AS DateKey,
+// AVG(AverageRate)         AS AverageRate
+// FROM [$(VentasQvdPath)/L1_MYSQL_FACT_Tasa_Cambio.qvd] (qvd)
+// WHERE  CurrencyKey = 1
+// GROUP BY NUM(MonthStart(DateKey));
+// [$(tableName)]:
+// NOCONCATENATE
+// LOAD*,
+// //APPLYMAP($(mapTasaCambio),DateKey,'N/E') AS AverageRate,
+// UnitCost_EUR      * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS UnitCost_USD,
+// UnitPrice_EUR     * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS UnitPrice_USD,
+// SalesAmount_EUR   * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS SalesAmount_USD,
+// ReturnAmount_EUR  * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS ReturnAmount_USD,
+// DiscountAmount_EUR* APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS DiscountAmount_USD,
+// TotalCost_EUR     * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS TotalCost_USD,
+// MargenBruto_EUR   * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS MargenBruto_USD,
+// MargenNeto_EUR    * APPLYMAP('$(mapTasaCambio)', DateKey, 0) AS MargenNeto_USD;
 
+// LOAD
+// Flag_Tipo_Transaccion,
+// DateKey,
+// StoreKey,
+// ProductKey,
+// PromotionKey,
+// CurrencyKey,
+// CustomerKey,
+// channelKey        AS ChannelKey,
+// SalesQuantity,
+// ReturnQuantity,
+// DiscountQuantity,
+// UnitCost          AS UnitCost_EUR,
+// UnitPrice         AS UnitPrice_EUR,
+// SalesAmount       AS SalesAmount_EUR,
+// ReturnAmount      AS ReturnAmount_EUR,
+// DiscountAmount    AS DiscountAmount_EUR,
+// TotalCost         AS TotalCost_EUR,
+// MargenBruto       AS MargenBruto_EUR,
+// MargenNeto        AS MargenNeto_EUR
+// RESIDENT $(tablaTemporal_01);
 
+// DROP TABLE $(tablaTemporal_01); 
+// // Guarda la tabla en un archivo QVD en la carpeta de versión especificada
+// STORE [$(tableName)] INTO [$(PathFile)/$(QVDFileName).qvd] (qvd);
 
-
-
-
-
-
-
-
-
-
-
+// // Eliminar la tabla de la memoria
+// DROP TABLE [$(tableName)];
