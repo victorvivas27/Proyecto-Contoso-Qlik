@@ -10,7 +10,7 @@ Fecha : 27-08-2024
  SET QVDFileName        = L3_FACT_Venta_Consolidada;
  SET PathFile           = $(TransformacionVentasQvdPath);
  SET tablaTemporal_01   = Tabla_Temporal_1;
- SET mapTasaCambio      = Map_Tasa_Cambio;
+ //SET mapTasaCambio      = Map_Tasa_Cambio;
 
 
 
@@ -63,7 +63,7 @@ MargenNeto
 FROM [$(PathFile)/L2_FACT_Maestra_Ventas_Tiendas.qvd] (qvd);
 
 // PROCESO 2: Creación del mapa de tasas de cambio
-$(mapTasaCambio):
+ Map_Tasa_Cambio:
 MAPPING
 LOAD
     NUM(MonthStart(DateKey)) AS DateKey,          // Mes y año como clave para la tasa de cambio
@@ -103,7 +103,7 @@ channelKey        AS ChannelKey,
 SalesQuantity,
 ReturnQuantity,
 DiscountQuantity,
-APPLYMAP('$(mapTasaCambio)',DateKey,'N/E') AS AverageRate,
+APPLYMAP('Map_Tasa_Cambio',DateKey,'N/E') AS AverageRate,
 UnitCost          AS UnitCost_EUR,
 UnitPrice         AS UnitPrice_EUR,
 SalesAmount       AS SalesAmount_EUR,

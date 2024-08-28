@@ -6,10 +6,6 @@ Fecha : 19-08-2024
 SET tableName         = FACT_Tabla_Consolidada;
 SET QVDFileName       = L4_FACT_Tabla_Consolidada;
 SET PathFile          = $(TransformacionVentasQvdPath);
-// TRACE =====================================================;
-// TRACE ** Comenzando la carga de $(tableName)**;
-// TRACE ======================================================;
-
 [$(tableName)]:
 LOAD
 Flag_Tipo_Transaccion,
@@ -23,6 +19,7 @@ ChannelKey,
 SalesQuantity,
 ReturnQuantity,
 DiscountQuantity,
+AverageRate,
 UnitCost_EUR,
 UnitPrice_EUR,
 SalesAmount_EUR,
