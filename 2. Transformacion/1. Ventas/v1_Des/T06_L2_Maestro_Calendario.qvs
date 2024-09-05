@@ -51,7 +51,7 @@ LOAD
     Date(DateKey, 'DD/MM/YYYY') AS Fecha,
     Year(DateKey) AS Anio,
     Month(DateKey) AS Mes,
-    Date(MonthStart(DateKey), 'YYYYMM') AS Periodo
+    Date(MonthStart(DateKey), 'YYYY-MM') AS Periodo
 ;
 
 /* Primera carga, que genera una lista de fechas entre FechaInicial y FechaFin */
