@@ -13,6 +13,8 @@ GeographyKey             AS GeographyKey_Cliente,
 CustomerLabel,
 Title,
 IF (IsNull(FirstName), CompanyName, FirstName) AS Nombre_Cliente,
+//IF (IsNull(FirstName) OR Trim(FirstName) = '', CompanyName, FirstName) AS Nombre_Cliente,  // Si FirstName es nulo o está vacío, usa CompanyName
+//MiddleName,
 //MiddleName,
 NameStyle,
 BirthDate,
